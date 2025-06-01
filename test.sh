@@ -3,13 +3,21 @@ set -ueo pipefail
 
 mkdir -p .local
 
-cat <<EOF > .local/Dockerfile
-FROM debian:12-slim
-RUN apt-get update && apt-get install -y curl
-EOF
+PATH=$PWD:$PATH
 
-docker build -t debian-with-curl .local
+apk-local manager add gcc musl-dev
 
-# we use /r to run the script in the different directory than the one where the script is located, so we don't share .local accidentally
-docker run -v $PWD:/app -w /r debian-with-curl \
-    bash -c "/app/apk-local manager add gcc && /app/apk-local env gcc --version"
+echo '📋 Checking gcc version...'
+apk-local env gcc --version
+        
+echo '🔨 Compiling test program...'
+apk-local env gcc tests/test_compile.c -o test_compile
+        
+echo '🔍 Checking binary dependencies with ldd...'
+apk-local env ldd test_compile || echo 'Note: ldd may not be available, checking with file command'
+file test_compile
+        
+echo '🚀 Running compiled test program...'
+./test_compile
+        
+echo '✅ All tests passed! Alpine GCC is fully functional.'
