@@ -1,3 +1,6 @@
+#!/bin/bash
+set -ueo pipefail
+
 mkdir -p .local
 
 cat <<EOF > .local/Dockerfile
@@ -7,5 +10,6 @@ EOF
 
 docker build -t debian-with-curl .local
 
+# we use /r to run the script in the different directory than the one where the script is located, so we don't share .local accidentally
 docker run -v $PWD:/app -w /r debian-with-curl \
     bash -c "/app/apk-local manager add gcc && /app/apk-local env gcc --version"
