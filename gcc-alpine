@@ -1,0 +1,18 @@
+#!/bin/bash
+# Enhanced Alpine GCC runner with complete environment setup
+
+ALPINE_ROOT="/workspace/.local/alpine"
+ALPINE_LD="$ALPINE_ROOT/lib/ld-musl-x86_64.so.1"
+ALPINE_GCC="$ALPINE_ROOT/usr/bin/gcc"
+
+# Set up complete Alpine environment for all subprocesses
+export LD_LIBRARY_PATH="$ALPINE_ROOT/lib:$ALPINE_ROOT/usr/lib:${LD_LIBRARY_PATH:-}"
+export PATH="$ALPINE_ROOT/usr/bin:$ALPINE_ROOT/usr/libexec/gcc/x86_64-alpine-linux-musl/14.3.0:$PATH"
+
+# Also try setting the interpreter directly for exec calls
+export LD_LOADER="$ALPINE_LD"
+
+echo "🏔️  Using Alpine GCC with fixed environment..." >&2
+
+# Execute with Alpine dynamic linker
+exec "$ALPINE_LD" "$ALPINE_GCC" "$@"
