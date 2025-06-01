@@ -46,6 +46,30 @@ show_usage() {
     echo "  latest-stable     # Latest stable release"
 }
 
+# Function to detect architecture for apk.static download
+detect_arch() {
+    local uname_arch=$(uname -m)
+    case "$uname_arch" in
+        x86_64)
+            echo "x86_64"
+            ;;
+        aarch64|arm64)
+            echo "aarch64"
+            ;;
+        armv7l|armv6l)
+            echo "armv7"
+            ;;
+        i386|i686)
+            echo "x86"
+            ;;
+        *)
+            echo "❌ Unsupported architecture: $uname_arch" >&2
+            echo "Supported architectures: x86_64, aarch64, armv7, x86" >&2
+            return 1
+            ;;
+    esac
+}
+
 # Function to download and setup APK
 setup_apk() {
     # Ensure .local directory exists
@@ -54,9 +78,22 @@ setup_apk() {
     # Download apk.static if needed
     if [ ! -f "$APK_STATIC" ]; then
         echo "Downloading apk.static to .local/..."
+        
+        # Detect architecture
+        local arch=$(detect_arch)
+        if [ $? -ne 0 ]; then
+            echo "❌ Failed to detect compatible architecture"
+            return 1
+        fi
+        
+        echo "🔍 Detected architecture: $arch (from uname -m: $(uname -m))"
+        
         # Use system curl explicitly to avoid Alpine curl conflicts
-        curl -L https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.10/aarch64/apk.static -o "$APK_STATIC" || \
-        command curl -L https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.10/aarch64/apk.static -o "$APK_STATIC"
+        local download_url="https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.10/$arch/apk.static"
+        echo "📥 Downloading from: $download_url"
+        
+        curl -L "$download_url" -o "$APK_STATIC" || \
+        command curl -L "$download_url" -o "$APK_STATIC"
         chmod +x "$APK_STATIC"
         echo "apk.static downloaded to $APK_STATIC"
     fi
