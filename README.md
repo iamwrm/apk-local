@@ -1,126 +1,249 @@
-# APK Local - Unified Alpine Package Manager
+# Alpine Environment - Docker-free Alpine Linux with Channel Switching
 
-**One script to rule them all** - A unified Alpine package manager for container environments that doesn't require sudo.
+**Run Alpine Linux GCC and tools natively on Ubuntu/glibc systems** - A lightweight Alpine environment using bubblewrap that supports multiple Alpine channels without Docker.
 
 ## 🚀 Quick Start
 
 ```bash
-# Install packages
-./apk-local manager add git vim htop curl
+# Set up Alpine environment (defaults to v3.19)
+./alpine-env.sh run gcc --version
 
-# Run commands with Alpine PATH
-./apk-local env git status
+# Or choose a specific Alpine channel
+./alpine-env.sh setup edge        # Latest bleeding-edge
+./alpine-env.sh setup v3.22       # Alpine 3.22 stable
+./alpine-env.sh setup v3.19       # Alpine 3.19 stable
 
-# Load environment variables
-source <(./apk-local export)
-git --version  # Now uses Alpine git
+# Compile and run programs
+./alpine-env.sh run gcc hello.c -o hello
+./alpine-env.sh run ./hello
+
+# Install additional packages
+./alpine-env.sh run apk add nodejs npm python3
+./alpine-env.sh run node --version
 ```
+
+## 🏔️ Available Alpine Channels
+
+- **v3.19** - Alpine 3.19 stable (GCC 13.2.1)
+- **v3.20** - Alpine 3.20 stable  
+- **v3.21** - Alpine 3.21 stable
+- **v3.22** - Alpine 3.22 stable (GCC 14.2.0) - **Current**
+- **edge** - Latest bleeding-edge packages (GCC 14.3.0)
+- **latest-stable** - Latest stable release (currently 3.22)
 
 ## 📋 What You Get
 
-- ✅ **Complete package management** - Install, search, update Alpine packages
-- ✅ **Container-friendly** - Works in LXC/Docker without nested containers  
-- ✅ **No sudo required** - Installs to user space (`$PWD/.local/alpine`)
-- ✅ **Temporary command execution** - Run binaries with Alpine PATH
-- ✅ **Environment export** - Source environment variables for persistent access
-- ✅ **Single script** - Everything unified in one executable
+- ✅ **Native Alpine GCC** - Compile with musl libc on glibc systems
+- ✅ **Multiple Alpine versions** - Switch between stable and edge channels
+- ✅ **No Docker required** - Uses bubblewrap for lightweight containerization
+- ✅ **No sudo required** - Installs to user space (`~/.local/alpine-env`)
+- ✅ **Complete development environment** - GCC, G++, make, cmake, musl-dev included
+- ✅ **APK package management** - Install any Alpine package
+- ✅ **Single script** - Everything in one executable
 
 ## 🛠️ Commands
 
-### Package Management
+### Setup Commands
 ```bash
-./apk-local manager add <packages>     # Install packages
-./apk-local manager search <term>      # Search packages  
-./apk-local manager update             # Update package index
-./apk-local manager list               # List installed packages
-./apk-local manager del <package>      # Remove package
+./alpine-env.sh setup <channel>    # Set up specific Alpine channel
+./alpine-env.sh setup edge         # Set up Alpine edge (latest)
+./alpine-env.sh setup v3.22        # Set up Alpine 3.22 stable
+./alpine-env.sh setup v3.19        # Set up Alpine 3.19 stable
 ```
 
-### Environment Management
+### Run Commands
 ```bash
-./apk-local env <binary> [args...]     # Run binary with Alpine PATH
-./apk-local export                     # Export environment variables
-source <(./apk-local export)           # Load environment
+./alpine-env.sh run <command>      # Run any command in Alpine environment
+./alpine-env.sh run gcc --version  # Check GCC version
+./alpine-env.sh run apk add nodejs # Install packages
+./alpine-env.sh run /bin/sh        # Get Alpine shell
 ```
 
 ## 📖 Usage Examples
 
-### Install Development Tools
+### Development Workflow
 ```bash
-./apk-local manager add git nodejs npm python3 curl wget vim
+# Set up Alpine edge for latest tools
+./alpine-env.sh setup edge
+
+# Install development packages
+./alpine-env.sh run apk add git nodejs npm python3 curl
+
+# Compile C programs with Alpine GCC
+./alpine-env.sh run gcc -static myapp.c -o myapp
+
+# Run the compiled binary
+./alpine-env.sh run ./myapp
 ```
 
-### Run Commands Temporarily
+### Cross-Channel Testing
 ```bash
-./apk-local env git clone https://github.com/user/repo.git
-./apk-local env node --version
-./apk-local env python3 script.py
+# Test with Alpine edge (GCC 14.3.0)
+./alpine-env.sh setup edge
+./alpine-env.sh run gcc --version
+./alpine-env.sh run gcc test.c -o test_edge
+
+# Test with Alpine 3.22 stable (GCC 14.2.0)  
+./alpine-env.sh setup v3.22
+./alpine-env.sh run gcc --version
+./alpine-env.sh run gcc test.c -o test_stable
+
+# Compare results
+./alpine-env.sh run ./test_edge
+./alpine-env.sh run ./test_stable
 ```
 
-### Persistent Environment
+### Package Management
 ```bash
-# Load Alpine environment
-source <(./apk-local export)
+# Search for packages
+./alpine-env.sh run apk search nodejs
 
-# Now all Alpine packages are in PATH
-git --version     # Alpine git
-node --version    # Alpine node
-python3 --version # Alpine python3
+# Install packages
+./alpine-env.sh run apk add nodejs npm yarn
+
+# Check installed packages
+./alpine-env.sh run apk list --installed
+
+# Update package index
+./alpine-env.sh run apk update
 ```
 
-### Project-Specific Setup
+### Interactive Shell
 ```bash
-# Different directories can have different Alpine environments
-cd ~/project1
-./apk-local manager add nodejs npm
-source <(./apk-local export)
+# Get an Alpine shell
+./alpine-env.sh run /bin/sh
 
-cd ~/project2
-./apk-local manager add python3 pip
-source <(./apk-local export)
+# Inside the shell, you have full Alpine environment:
+# apk add vim
+# gcc --version
+# cat /etc/alpine-release
+# exit
 ```
 
-## 📁 File Structure
+## 🔧 Technical Details
 
+### How It Works
+- **Bubblewrap containerization** - Lightweight namespace isolation
+- **Alpine minirootfs** - Downloads minimal Alpine filesystem
+- **Automatic toolchain setup** - Installs GCC, G++, musl-dev, make, cmake
+- **Volume mounting** - Your current directory is available as `/tmp/workspace`
+- **Network access** - Full internet connectivity for APK operations
+
+### System Requirements
+- **Linux system** (Ubuntu, Debian, etc.)
+- **bubblewrap** package installed:
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install bubblewrap
+  
+  # Fedora/RHEL
+  sudo dnf install bubblewrap
+  
+  # Arch Linux
+  sudo pacman -S bubblewrap
+  ```
+
+### File Structure
 ```
-your-project/
-├── .local/alpine/usr/bin/    # Installed Alpine binaries
-├── apk-local                 # Unified script ⭐
-└── apk.static               # Alpine package manager binary
+~/.local/alpine-env/          # Alpine environment root
+├── bin/                      # Alpine binaries
+├── usr/                      # Alpine user programs
+├── etc/                      # Alpine configuration
+└── var/                      # Alpine variable data
 ```
 
-## 🎯 Key Features
+## 🆚 Why Alpine Environment?
 
-### Unified Interface
-- **One script** handles everything (package management, environment, execution)
-- **Consistent syntax** across all operations
-- **No multiple files** to manage
+### vs Docker
+- ✅ **Faster startup** - No container overhead
+- ✅ **Native performance** - Direct system calls
+- ✅ **Simpler setup** - No Docker daemon required
+- ✅ **Better integration** - Direct file system access
 
-### Smart Environment Management  
-- **Automatic detection** of Alpine vs system binaries
-- **Temporary execution** without changing global environment
-- **Easy environment export** for persistent access
-- **Helpful aliases** when sourcing environment
+### vs Native GCC
+- ✅ **musl libc** - Smaller, more secure binaries
+- ✅ **Static linking** - Self-contained executables
+- ✅ **Reproducible builds** - Consistent Alpine environment
+- ✅ **Multiple versions** - Switch between Alpine channels
 
-### Container Optimized
-- **No sudo required** - everything in user space
-- **Container-friendly** - works in LXC, Docker, etc.
-- **Permission error handling** - graceful degradation in restricted environments
-- **Isolated installations** - per-directory Alpine environments
-- **Smart compatibility** - uses Alpine's musl dynamic linker to run Alpine binaries on glibc systems
+### vs Virtual Machines
+- ✅ **Lightweight** - Minimal resource usage
+- ✅ **Fast** - Near-native performance
+- ✅ **Integrated** - Shares host filesystem
+- ✅ **Simple** - Single script operation
 
-## 🆘 Getting Help
+## 🧪 Testing
 
+Run the comprehensive test suite:
 ```bash
-./apk-local                    # Show main help
-./apk-local manager           # Show package manager help  
-./apk-local env               # Show environment help
+./test.sh
 ```
 
-## 📚 Documentation
+This tests:
+- Multiple Alpine channels (v3.19, edge, v3.22)
+- GCC compilation and execution
+- APK package management
+- Shell access
+- Binary compatibility
 
-- **[QUICK_START.md](QUICK_START.md)** - Detailed usage guide
+## 🆘 Troubleshooting
+
+### Bubblewrap Not Found
+```bash
+# Install bubblewrap
+sudo apt install bubblewrap  # Ubuntu/Debian
+sudo dnf install bubblewrap  # Fedora/RHEL
+sudo pacman -S bubblewrap    # Arch Linux
+```
+
+### Container Environment Issues
+If you see "bubblewrap cannot create namespaces" in Docker/containers:
+
+**This is expected behavior** - most containers disable user namespaces for security.
+
+**Solutions:**
+1. **Run on host system** (recommended):
+   ```bash
+   # Copy script to host and run there
+   docker cp container:/path/to/alpine-env.sh .
+   ./alpine-env.sh run gcc --version
+   ```
+
+2. **Privileged container** (not recommended):
+   ```bash
+   docker run --privileged ...
+   ```
+
+3. **Enable user namespaces**:
+   ```bash
+   docker run --cap-add=SYS_ADMIN --security-opt seccomp=unconfined ...
+   ```
+
+### Permission Errors
+The script automatically handles permission errors in containerized environments. The "ERROR: X errors updating directory permissions" messages are normal and expected.
+
+### Kernel User Namespace Issues
+On some systems, user namespaces may be disabled:
+```bash
+# Enable user namespaces
+echo 'kernel.unprivileged_userns_clone=1' | sudo tee /etc/sysctl.d/00-local-userns.conf
+sudo sysctl --system
+```
+
+### Network Issues
+Ensure your system has internet connectivity for downloading Alpine packages and repositories.
+
+## 🎯 Use Cases
+
+- **Cross-compilation** - Build musl binaries on glibc systems
+- **Alpine development** - Test packages before Alpine deployment
+- **Static binaries** - Create self-contained executables
+- **Security research** - Analyze musl vs glibc behavior
+- **CI/CD pipelines** - Consistent Alpine builds without Docker
+- **Educational** - Learn Alpine Linux and musl libc
 
 ## 🎉 Success!
 
-You now have a complete, unified Alpine package management system that works without sudo in any container environment. Everything you need in one script! 🏔️
+You now have a complete Alpine Linux development environment that runs natively on your glibc system, with the ability to switch between different Alpine channels for testing and development! 🏔️
+
+**No Docker, no VMs, just pure Alpine goodness!**
