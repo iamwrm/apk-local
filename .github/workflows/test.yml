@@ -17,3 +17,27 @@ jobs:
     - name: Run tests
       run: bash ./test_container.sh
       
+    - name: Test debian_portable.sh with vim
+      run: |
+        ./debian_portable.sh -b vim -d vim_exe vim
+        echo "Testing vim..."
+        ./vim_exe/vim --version | head -1
+        
+    - name: Test debian_portable.sh with gcc
+      run: |
+        ./debian_portable.sh -b gcc -d gcc_exe gcc
+        echo "Testing gcc..."
+        ./gcc_exe/gcc --version | head -1
+        
+        # Test compilation
+        cat > test.c << 'EOF'
+        #include <stdio.h>
+        int main() {
+            printf("Hello from portable gcc!\n");
+            return 0;
+        }
+        EOF
+        
+        ./gcc_exe/gcc test.c -o test
+        ./test
+      

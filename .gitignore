@@ -1,1 +1,23 @@
 .local/
+local_data/
+
+# Extracted portable binaries
+*_exe/
+
+# Test files
+test_gcc
+test_gcc.c
+test
+test.c
+*.o
+*.out
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
