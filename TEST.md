@@ -20,33 +20,58 @@ This document contains test results for extracting various compilers using `debi
 ### ❌ G++ (GNU C++ Compiler)  
 - **Command**: `./debian_portable.sh -b g++ -d gpp_test g++`
 - **Version**: g++ (Debian 14.2.0-19) 14.2.0 (available in Debian)
-- **Extraction**: ❌ Failed
+- **Extraction**: ❌ Failed - "Dynamic linker not found" error
 - **Compilation Test**: ❌ Not tested (extraction failed)
-- **Notes**: Script needs debugging for G++ extraction. Package exists in Debian but extraction fails.
+- **Notes**: Script fails during extraction phase. Need to debug dependency handling for C++ standard libraries.
 
-### ⏳ Clang (LLVM C Compiler)
-- **Status**: Not yet tested
-- **Expected Package**: `clang`
+### ⚠️ Clang (LLVM C Compiler)
+- **Command**: `./debian_portable.sh -b clang -d clang_test clang`
+- **Version**: Debian clang version 19.1.7 (3)
+- **Extraction**: ✅ Successful
+- **Compilation Test**: ❌ Failed - missing internal clang components
+- **Error**: `clang: error: unable to execute command: No such file or directory`
+- **Notes**: Clang binary extracts but lacks required internal tools (-cc1). Needs complete clang toolchain.
 
-### ⏳ Clang++ (LLVM C++ Compiler)
-- **Status**: Not yet tested  
-- **Expected Package**: `clang++`
+### ❌ Clang++ (LLVM C++ Compiler)
+- **Command**: `./debian_portable.sh -b clang++ -d clangpp_test clang++`
+- **Package Issue**: `clang++` is included in the `clang` package, not a separate package
+- **Extraction**: ❌ Failed - package name issue
+- **Compilation Test**: ❌ Not tested
+- **Notes**: Should use `clang` package and extract `clang++` binary from it.
 
-### ⏳ Go (Google Go Compiler)
-- **Status**: Not yet tested
-- **Expected Package**: `golang-go`
+### ⚠️ Go (Google Go Compiler)
+- **Command**: `./debian_portable.sh -b go -d go_test golang-go`
+- **Version**: Available in Debian as `golang-go` package
+- **Extraction**: ⚠️ Partial - binary extracted but script fails at wrapper creation
+- **Binary Test**: ❌ `go: cannot find GOROOT directory`
+- **Notes**: Go is statically linked (no dynamic linker needed). Needs GOROOT environment setup and Go stdlib extraction.
 
 ## Known Issues
 
-1. **G++ Extraction Failure**: The script fails during G++ extraction with "Dynamic linker not found" error
-2. **Missing Standard Libraries**: Need to ensure C++ standard libraries are properly included for C++ compilers
+1. **G++/Clang++ Extraction Failures**: Scripts fail during extraction with "Dynamic linker not found" errors
+2. **Clang Missing Internal Tools**: Clang extracts but lacks -cc1 and other internal components needed for compilation
+3. **Go Static Binary Handling**: Script expects dynamic linking but Go produces static binaries
+4. **Package Name Inconsistencies**: Some compilers (clang++) are bundled in parent packages
+5. **Missing Standard Libraries**: C++ compilers need proper stdlib extraction and environment setup
+
+## Test Summary
+
+| Compiler | Extraction | Version Check | Compilation | Status |
+|----------|------------|---------------|-------------|---------|
+| GCC      | ✅ Success | ✅ Works      | ✅ Works    | **✅ Full Success** |
+| G++      | ❌ Failed  | ❌ N/A        | ❌ N/A      | **❌ Failed** |
+| Clang    | ✅ Success | ✅ Works      | ❌ Failed   | **⚠️ Partial** |
+| Clang++  | ❌ Failed  | ❌ N/A        | ❌ N/A      | **❌ Failed** |
+| Go       | ⚠️ Partial | ❌ GOROOT     | ❌ N/A      | **⚠️ Partial** |
 
 ## Next Steps
 
-1. Debug G++ extraction issue
-2. Test clang, clang++, and Go compilers
-3. Update script to handle compiler-specific library requirements
-4. Add comprehensive compilation tests for each compiler
+1. ✅ ~~Debug G++ extraction issue~~ - Identified: dependency extraction problems
+2. ✅ ~~Test clang, clang++, and Go compilers~~ - Completed with issues found
+3. **Priority**: Fix clang internal tools extraction (requires clang development packages)
+4. **Priority**: Handle static binaries (Go) that don't need dynamic linking
+5. **Enhancement**: Improve C++ stdlib handling for g++ and clang++
+6. **Enhancement**: Add GOROOT and Go stdlib support for Go compiler
 
 ## Script Improvements Made
 
