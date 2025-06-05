@@ -29,7 +29,7 @@ jobs:
         echo "Testing gcc..."
         ./gcc_exe/gcc --version | head -1
         
-        # Test compilation
+        # Test C compilation
         cat > test.c << 'EOF'
         #include <stdio.h>
         int main() {
@@ -38,6 +38,60 @@ jobs:
         }
         EOF
         
-        ./gcc_exe/gcc test.c -o test
-        ./test
+        ./gcc_exe/gcc test.c -o test_c
+        ./test_c
+        
+    - name: Test debian_portable.sh with g++
+      run: |
+        ./debian_portable.sh -b g++ -d gpp_exe g++
+        echo "Testing g++..."
+        ./gpp_exe/g++ --version | head -1
+        
+        # Test C++ compilation
+        cat > test.cpp << 'EOF'
+        #include <iostream>
+        int main() {
+            std::cout << "Hello from portable g++!" << std::endl;
+            return 0;
+        }
+        EOF
+        
+        ./gpp_exe/g++ test.cpp -o test_cpp
+        ./test_cpp
+        
+    - name: Test debian_portable.sh with clang
+      run: |
+        ./debian_portable.sh -b clang -d clang_exe clang
+        echo "Testing clang..."
+        ./clang_exe/clang --version | head -1
+        
+        # Test C compilation with clang
+        cat > test_clang.c << 'EOF'
+        #include <stdio.h>
+        int main() {
+            printf("Hello from portable clang!\n");
+            return 0;
+        }
+        EOF
+        
+        ./clang_exe/clang test_clang.c -o test_clang
+        ./test_clang
+        
+    - name: Test debian_portable.sh with clang++
+      run: |
+        ./debian_portable.sh -b clang++ -d clangpp_exe clang++
+        echo "Testing clang++..."
+        ./clangpp_exe/clang++ --version | head -1
+        
+        # Test C++ compilation with clang++
+        cat > test_clang.cpp << 'EOF'
+        #include <iostream>
+        int main() {
+            std::cout << "Hello from portable clang++!" << std::endl;
+            return 0;
+        }
+        EOF
+        
+        ./clangpp_exe/clang++ test_clang.cpp -o test_clangpp
+        ./test_clangpp
       

@@ -1,14 +1,15 @@
 .local/
 local_data/
 
-# Extracted portable binaries
+# Extracted portable binaries and test directories
 *_exe/
+*_test/
 
 # Test files
-test_gcc
-test_gcc.c
-test
-test.c
+test*
+*.c
+*.cpp
+*.go
 *.o
 *.out
 
